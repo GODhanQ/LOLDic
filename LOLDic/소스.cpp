@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string.h>
-#include <stdlib.h>
+#include <string>
+#include <fstream>
+#define Capacity 200
 using namespace std;
 
 class LOLDic
@@ -29,24 +31,26 @@ public:
             << "포지션: " << position << endl;
     }
 
-    string ShowName() const
+    string ShowName()
     {
         return name;
     }
 
+    string ShowPos()
+    {
+        return position;
+    }
+    
     double ShowHp() const
     {
         return hp;
     }
-
-    string ShowPos() const
-    {
-        return position;
-    }
 };
 
+void InSertTestData();
 void ShowMenu();
 int ExcuteCommand(int CommandNum);
+void quick_sort(int Start, int CountDic);
 
 void Search();
 int InSert();
@@ -56,14 +60,16 @@ void PrintAll();
 void FindMaxHp();
 void SortByHp();
 
-LOLDic* Dictionary[200];
+LOLDic* Dictionary[Capacity];
 int CountDic{};
 
 int main()
 {
+    InSertTestData();
 
     while (true)
     {
+
         int CommandNum{};
 
         ShowMenu();
@@ -116,14 +122,21 @@ int ExcuteCommand(int CommandNum)
             int State{};
             State = InSert();
             if (State == -1) {
+                system("cls");
                 cin.clear();
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 cout << "입력에 오류가 있습니다. 다시 입력해주세요." << endl;
                 continue;
             }
             else if (State == -2) {
+                system("cls");
                 cout << "중복되는 이름이 있습니다. 다시 입력해주세요." << endl;
                 continue;
+            }
+            else if (State == -3) {
+                system("cls");
+                cout << "디렉토리가 꽉 찼습니다. \n";
+                break;
             }
             else break;
         }
@@ -156,6 +169,13 @@ int ExcuteCommand(int CommandNum)
 
 void Search()
 {
+    if (CountDic == 0) {
+        system("cls");
+        cout << "딕셔너리에 항목이 존재하지 않습니다. \n";
+        return;
+    }
+
+    system("cls");
     string Sname;
     cout << "검색할 챔피언의 이름을 입력해주세요. : ";
     cin >> Sname;
@@ -170,6 +190,11 @@ void Search()
 
 int InSert()
 {
+    if (CountDic == 200) {
+        cout << "디렉토리가 꽉 찼습니다.\n";
+        return -3;
+    }
+
     Dictionary[CountDic] = new LOLDic();
     int hp, mp, speed, range;
     string name, position;
@@ -187,8 +212,7 @@ int InSert()
         }
     }
 
-    Dictionary[CountDic]->InsertDic(name, hp, mp, speed, range, position);
-    CountDic++;
+    Dictionary[CountDic++]->InsertDic(name, hp, mp, speed, range, position);
     system("cls");
 
     return 0;
@@ -196,6 +220,13 @@ int InSert()
 
 void Delete()
 {
+    if (CountDic == 0) {
+        system("cls");
+        cout << "딕셔너리에 항목이 존재하지 않습니다. \n";
+        return;
+    }
+
+    system("cls");
     string Dname;
     cout << "삭제할 챔피언의 이름을 입력해주세요. : ";
     cin >> Dname;
@@ -218,7 +249,15 @@ void Delete()
 
 void DeleteAll()
 {
+    if (CountDic == 0) {
+        system("cls");
+        cout << "딕셔너리에 항목이 존재하지 않습니다. \n";
+        return;
+    }
+
+    system("cls");
     string Pos;
+    bool flag{ false };
     cout << "삭제할 포지션을 입력해주세요. : ";
     cin >> Pos;
 
@@ -230,35 +269,42 @@ void DeleteAll()
             }
             CountDic--;
             i--;
-            cout << "성공적으로 삭제하였습니다.\n";
+            if(flag == true) cout << "성공적으로 삭제하였습니다.\n";
         }
-        cout << "해당 포지션의 정보가 없어 삭제된 항목이 없습니다.\n";
     }
+    if(flag == false) cout << "해당 포지션의 정보가 없어 삭제된 항목이 없습니다.\n";
 
     system("cls");
 }
 
 void PrintAll()
 {
+    if (CountDic == 0) {
+        system("cls");
+        cout << "딕셔너리에 항목이 존재하지 않습니다. \n";
+        return;
+    }
+
     system("cls");
     for (int i = 0; i < CountDic; i++) {
         Dictionary[i]->Show();
     }
+    cout << "총 " << CountDic << "개의 항목이 있습니다.\n";
     cout << "\n\n";
 }
 
 void FindMaxHp()
 {
+    if (CountDic == 0) {
+        system("cls");
+        cout << "딕셔너리에 항목이 존재하지 않습니다. \n";
+        return;
+    }
+
     double MaxHp{};
     int StoreNum{};
 
     system("cls");
-
-    if (CountDic == 0) {
-        cout << "딕셔너리에 항목이 존재하지 않습니다.\n";
-        return;
-    }
-
     for (int i = 0; i < CountDic; i++) {
         if (MaxHp < Dictionary[i]->ShowHp()) {
             MaxHp = Dictionary[i]->ShowHp();
@@ -274,10 +320,14 @@ void FindMaxHp()
 void SortByHp()
 {
     if (CountDic == 0) {
+        system("cls");
         cout << "딕셔너리에 항목이 존재하지 않습니다. \n";
         return;
     }
 
+    quick_sort(0, CountDic - 1);    //CountDic은 데이터 끝 + 1을 가리키기에 -1을 하여 정렬.
+
+    /*
     qsort(Dictionary, CountDic, sizeof(LOLDic*), [](const void* a, const void* b) {
         const LOLDic* ptrA = *static_cast<const LOLDic* const*>(a);
         const LOLDic* ptrB = *static_cast<const LOLDic* const*>(b);
@@ -286,7 +336,79 @@ void SortByHp()
         if (ptrA->ShowHp() < ptrB->ShowHp()) return 1;
         return 0;
         });
+    */
 
     system("cls");
     cout << "내림차순 정렬되었습니다.\n\n";
+}
+
+void quick_sort(int start, int end) {
+    if (start >= end) {
+        return;
+    }
+
+    int pivot = start;	//피봇은 첫 번째 원소 
+    int i{ pivot + 1 }, j{ end }; //i는 피봇 다음원소 j는 마지막 원소 
+    LOLDic* temp;	
+
+    while (i <= j) {
+        //피봇 보다 큰 값 만날 때 까지
+        while (i <= end && Dictionary[i]->ShowHp() >= Dictionary[pivot]->ShowHp()) {
+            i++;
+        }
+        //피봇 보다 작은 값 만날 때 까지
+        while (j > start && Dictionary[j]->ShowHp() <= Dictionary[pivot]->ShowHp()) {
+            j--;
+        }
+
+        //위에서 계산된 i와 j가 만나거나 엇갈리면 종료
+        if (i >= j) break;
+
+        //두 원소 교환 
+        temp = Dictionary[i];
+        Dictionary[i] = Dictionary[j];
+        Dictionary[j] = temp;
+    }
+
+    //피봇 정렬 완료
+    temp = Dictionary[j];
+    Dictionary[j] = Dictionary[pivot];
+    Dictionary[pivot] = temp;
+
+    quick_sort(start, j - 1);	//피봇 중심으로 왼쪽부분 분할 정렬
+    quick_sort(j + 1, end);	    //피봇 중심으로 오른쪽부분 분할 정렬
+
+}
+
+void InSertTestData() {
+    ifstream in("testdata.txt");
+    if (!in.is_open()) {
+        std::cerr << "Error opening testdata.txt" << std::endl;
+        return;
+    }
+
+    string line;
+    while (getline(in, line)) {
+        size_t pos = 0;
+        string token;
+        string fields[6]; // name, hp, mp, speed, range, pos
+
+        int index = 0;
+        while ((pos = line.find("\t\t")) != string::npos && index < 5) {
+            fields[index++] = line.substr(0, pos);
+            line.erase(0, pos + 2); // "~~\t\t" 제거
+        }
+        fields[5] = line; // 마지막 데이터
+
+        if (index == 5) { // 데이터가 올바르게 6개 저장되었는지 확인
+            string name = fields[0], position = fields[5];
+            int hp{ stoi(fields[1]) }, mp{ stoi(fields[2]) }, speed{ stoi(fields[3]) }, range{ stoi(fields[4]) };
+
+            Dictionary[CountDic] = new LOLDic();
+            Dictionary[CountDic]->InsertDic(name, hp, mp, speed, range, position);
+            CountDic++;
+        }
+    }
+    
+    in.close();
 }
