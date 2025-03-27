@@ -50,7 +50,7 @@ public:
 void InSertTestData();
 void ShowMenu();
 int ExcuteCommand(int CommandNum);
-void quick_sort(int Start, int CountDic);
+void quick_sort(int start, int end);
 
 void Search();
 int InSert();
